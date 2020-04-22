@@ -12,15 +12,21 @@ const schema = buildSchema(`
     PokemonByType(type: String!): [Pokemon] 
     PokemonById(id: String!): Pokemon
     PokemonByAttack(attack: String!): [Pokemon]
+    AttacksFast: singleAttacks 
   }  
 
-  input PokemonInput {
-    id: String
-    name: String
-  }
+
 
   type Mutation {
-    createPokemon(input: PokemonInput): Pokemon
+    CreatePokemon(name: String, id: String): Pokemon
+    DeletePokemon(newName: String, id: String): String
+    EditPokemon(newName: String, id: String): Pokemon
+    CreateType(type: String): String
+    EditType(type: String, newType: String): String
+    DeleteType(type: String): String
+    CreateAttack(attack: String, type: String, damage: Int): singleAttacks
+    EditAttack(attack: String, type: String, damage: Int): singleAttacks
+    DeleteAttack(attack: String): singleAttacks
   }
 
 type Pokemon {
@@ -64,6 +70,10 @@ type Pokemon {
 const root = {
   Pokemons: () => {
     return data.pokemon;
+  },
+
+  AttacksFast: () => {
+    return data.attacks.fast;
   },
 
   Pokemon: (request) => {
@@ -114,6 +124,119 @@ const root = {
     
   
   */
+
+  // createPokemon: (request) => {
+  //   console.log(Object.keys(request))
+  //   console.log(request.name, request.id)
+  // }
+
+  CreatePokemon: (request) => {
+    const newPoke = {};
+    newPoke.id = request.id;
+    newPoke.name = request.name;
+    data.pokemon.push(newPoke);
+    return data.pokemon[data.pokemon.length - 1];
+  },
+
+  EditPokemon: (request) => {
+    // request.id, request.newName, request
+    const idnum = parseInt(request.id);
+    data.pokemon[idnum - 1].name = request.newName;
+    return data.pokemon[idnum - 1];
+  },
+
+  DeletePokemon: (request) => {
+    const idnum = parseInt(request.id);
+    console.log(data.pokemon[idnum - 1]);
+    data.pokemon[idnum - 1] = {
+      name: "This pokemon was deleted",
+      id: request.id,
+    };
+    console.log(data.pokemon[idnum - 1]);
+    return data.pokemon[idnum - 1].name;
+  },
+
+  CreateType: (request) => {
+    data.types.push(request.type);
+    return data.types[data.types.length - 1];
+  },
+
+  EditType: (request) => {
+    // request.id, request.newName, request
+    let index;
+    for (let i = 0; i < data.types.length; i++) {
+      if (data.types[i] === request.type) {
+        index = i;
+      }
+      data.types[index] = request.newType;
+    }
+    return data.types[index];
+  },
+
+  DeleteType: (request) => {
+    // request.id, request.newName, request
+    let index;
+    for (let i = 0; i < data.types.length; i++) {
+      if (data.types[i] === request.type) {
+        index = i;
+      }
+      data.types[index] = "This type was DELETED!!!!";
+    }
+    return data.types[index];
+  },
+
+  CreateAttack: (request) => {
+    const newAttack = {};
+    newAttack.name = request.attack;
+    newAttack.type = request.type;
+    newAttack.damage = request.damage;
+    data.attacks.fast.push(newAttack);
+    return data.attacks.fast[data.attacks.fast.length - 1];
+  },
+
+  EditAttack: (request) => {
+    if (
+      data.attacks.fast.filter((el) => el.name === request.attack).length > 0
+    ) {
+      for (let el of data.attacks.fast) {
+        if (el.name === request.attack) {
+          el.type = request.type;
+          el.damage = request.damage;
+          return el;
+        }
+      }
+    }
+    for (let el of data.attacks.special) {
+      if (el.name === request.attack) {
+        el.type = request.type;
+        el.damage = request.damage;
+        return el;
+      }
+    }
+  },
+
+  DeleteAttack: (request) => {
+    if (
+      data.attacks.fast.filter((el) => el.name === request.attack).length > 0
+    ) {
+      for (let el of data.attacks.fast) {
+        if (el.name === request.attack) {
+          el.name = "DELETED";
+          el.type = "Deleted";
+          el.damage = -10000;
+          return el;
+        }
+      }
+    }
+    for (let el of data.attacks.special) {
+      if (el.name === request.attack) {
+        el.name = "DELETED";
+        el.type = "Deleted";
+        el.damage = -10000;
+        return el;
+      }
+    }
+  },
 };
 
 // Start your express server!
